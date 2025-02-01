@@ -15,6 +15,10 @@ public class Vector4f {
         this(v.x, v.y, v.z, v.w);
     }
 
+    public Vector4f(Vector3f v, float w) {
+        this(v.x, v.y, v.z, w);
+    }
+
     public Vector4f sub(Vector4f v) {
         return new Vector4f(x - v.x, y - v.y, z - v.z, w - v.w);
     }
