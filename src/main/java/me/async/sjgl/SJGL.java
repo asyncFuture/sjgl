@@ -92,7 +92,7 @@ public class SJGL {
                     float v = baryCords.y;
                     float w = baryCords.z;
 
-                    if ((w >= 0) && (v >= 0) && (w + u <= 1)) {
+                    if (u >= 0 && v >= 0 && w >= 0) {
                         for (int i1 = 0; i1 < interpolates.size() / 3; i1++) {
                             Object f = Barycentric.interpolate(i1, interpolates, u, v, w);
                             Shader.setInterpolate(shader, f);
