@@ -4,7 +4,9 @@ import me.async.sjgl.FrameBuffer;
 import me.async.sjgl.SJGL;
 import me.async.sjgl.Shader;
 import me.async.sjgl.Texture;
+import me.async.sjgl.math.Matrix3x3f;
 import me.async.sjgl.math.Vector2f;
+import me.async.sjgl.math.Vector3f;
 import me.async.sjgl.math.Vector4f;
 import me.async.sjgl.system.Display;
 
@@ -21,13 +23,17 @@ public class Test {
         @Interpolate
         private Vector2f uv;
 
+        @Uniform(key = "transformation")
+        private Matrix3x3f matrix;
+
         @Uniform(key = "sample01")
         private Texture texture;
 
         @Override
         public Vector4f vertex() {
             uv = inUv;
-            return inVertex;
+            Vector3f transform = matrix.transform(new Vector2f(inVertex.x, inVertex.y));
+            return new Vector4f(transform, 1.0f);
         }
 
         @Override
@@ -61,6 +67,8 @@ public class Test {
         });
 
         Texture texture = new Texture(Texture.class.getResourceAsStream("/grass.png"));
+        Matrix3x3f transformation = new Matrix3x3f();
+        float rotate = 0;
 
         sjgl.setShader(PROGRAM_SHADER);
 
@@ -68,10 +76,14 @@ public class Test {
         while (!display.isRequestClosing()) {
             buffer.clear(SJGL.rgba(0, 0, 0, 255));
 
-            Shader.setUniform(PROGRAM_SHADER,"sample01", texture);
+            transformation.fast(new Vector2f(0, 0), (float) Math.toRadians(rotate++), new Vector2f(1, 1));
+
+            Shader.setUniform(PROGRAM_SHADER, "sample01", texture);
+            Shader.setUniform(PROGRAM_SHADER, "transformation", transformation);
             sjgl.drawTriangles(6);
 
             display.swap();
+
             display.sleep(16);
         }
         display.destroy();
