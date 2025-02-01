@@ -52,7 +52,6 @@ public class SJGL {
         vec.x /= vec.w;
         vec.y /= vec.w;
         vec.z /= vec.w;
-        vec.w /= vec.w;
 
         float x = Math.round((vec.x + 1.0f) * buffer.halfWidth());
         float y = Math.round((-vec.y + 1.0f) * buffer.halfHeight());
