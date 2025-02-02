@@ -18,12 +18,12 @@ public class Matrix3x3f {
         matrix[2] = 0;
 
         matrix[3] = 0;
-        matrix[5] = 1;
-        matrix[6] = 0;
+        matrix[4] = 1;
+        matrix[5] = 0;
 
+        matrix[6] = 0;
         matrix[7] = 0;
-        matrix[8] = 0;
-        matrix[9] = 1;
+        matrix[8] = 1;
         return this;
     }
 
