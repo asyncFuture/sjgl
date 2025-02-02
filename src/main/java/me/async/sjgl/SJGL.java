@@ -1,7 +1,5 @@
 package me.async.sjgl;
 
-import me.async.sjgl.math.Barycentric;
-import me.async.sjgl.math.Vector3f;
 import me.async.sjgl.math.Vector4f;
 
 import java.util.LinkedList;
@@ -10,10 +8,13 @@ import java.util.List;
 public class SJGL {
 
     private final FrameBuffer buffer;
+    private final Scanline scanline;
+
     private Shader shader;
 
     public SJGL(FrameBuffer buffer) {
         this.buffer = buffer;
+        this.scanline = new Scanline(buffer);
     }
 
     public static int rgba(int red, int green, int blue, int alpha) {
@@ -78,36 +79,16 @@ public class SJGL {
             Vector4f v1 = vertices[1];
             Vector4f v2 = vertices[2];
 
-            int[] bounding = BoundingBox.bounding(v0, v1, v2);
-            int minX = bounding[0];
-            int maxX = bounding[1];
+            scanline.setVertices(new Vector4f[]{v0, v1, v2});
+            scanline.setObjects(interpolates);
 
-            int minY = bounding[2];
-            int maxY = bounding[3];
-
-            for (int y = minY; y <= maxY; y++) {
-                for (int x = minX; x <= maxX; x++) {
-                    Vector3f baryCords = Barycentric.computeBarycentricCoords(v0, v1, v2, x, y);
-                    float u = baryCords.x;
-                    float v = baryCords.y;
-                    float w = baryCords.z;
-
-                    if (u >= 0 && v >= 0 && w >= 0) {
-                        for (int i1 = 0; i1 < interpolates.size() / 3; i1++) {
-                            Object f = Barycentric.interpolate(i1, interpolates, u, v, w);
-                            Shader.setInterpolate(shader, f);
-                        }
-                        Vector4f fragment = shader.fragment();
-
-                        buffer.setPixel(SJGL.rgba(fragment.x, fragment.y, fragment.z, fragment.w), x, y);
-                    }
-                }
-            }
+            scanline.rasterization();
         }
     }
 
     public void setShader(Shader shader) {
         this.shader = shader;
+        this.scanline.setShader(shader);
     }
 
     public FrameBuffer buffer() {
