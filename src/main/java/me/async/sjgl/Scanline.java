@@ -4,7 +4,9 @@ import me.async.sjgl.math.Barycentric;
 import me.async.sjgl.math.Vector3f;
 import me.async.sjgl.math.Vector4f;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class Scanline {
 
@@ -12,7 +14,7 @@ public class Scanline {
     public Shader shader;
 
     private Vector4f[] vertices;
-    private List<Object> objects;
+    private Map<String, List<Object>> objects;
 
     public Scanline(FrameBuffer buffer) {
         this.buffer = buffer;
@@ -43,19 +45,25 @@ public class Scanline {
         }
     }
 
-    public static void swap(Vector4f[] vertices, List<Object> objects, Vector4f v0, Vector4f v1, int index) {
+    public static void swap(Vector4f[] vertices, Map<String, List<Object>> objects, Vector4f v0, Vector4f v1, int index) {
         if (v0.y > v1.y) {
             vertices[index] = v1;
             vertices[index + 1] = v0;
 
-            for (int i = 0; i < objects.size() / 3; i += 2) {
-                int i0 = index + i;
-                int i1 = index + (i + 1);
+            for (String s : objects.keySet()) {
+                List<Object> list = objects.get(s);
+                for (int i = 0; i < list.size() / 3; i += 2) {
+                    int i0 = index + i;
+                    int i1 = index + (i + 1);
 
-                Object temp = objects.get(i0);
-                objects.set(i0, objects.get(i1));
-                objects.set(i1, temp);
+                    Object temp = list.get(i0);
+                    list.set(i0, list.get(i1));
+                    list.set(i1, temp);
+
+                    objects.put(s, list);
+                }
             }
+
         }
     }
 
@@ -100,9 +108,14 @@ public class Scanline {
             float v = baryCords.y;
             float w = baryCords.z;
 
-            for (int i1 = 0; i1 < objects.size() / 3; i1++) {
-                Object f = Barycentric.interpolate(i1, objects, u, v, w);
-                Shader.setInterpolate(shader, f);
+
+            for (String s : objects.keySet()) {
+                List<Object> list = objects.get(s);
+
+                for (int i1 = 0; i1 < list.size() / 3; i1++) {
+                    Object f = Barycentric.interpolate(i1, list, u, v, w);
+                    Shader.setInterpolate(shader, objects.keySet().stream().toList().get(i1), f);
+                }
             }
             Vector4f fragment = shader.fragment();
 
@@ -118,7 +131,7 @@ public class Scanline {
         this.vertices = vertices;
     }
 
-    public void setObjects(List<Object> objects) {
+    public void setObjects(Map<String, List<Object>> objects) {
         this.objects = objects;
     }
 }

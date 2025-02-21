@@ -2,8 +2,9 @@ package me.async.sjgl;
 
 import me.async.sjgl.math.Vector4f;
 
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SJGL {
 
@@ -65,7 +66,7 @@ public class SJGL {
 
         for (int i = 0; i < count; i += 3) {
             Vector4f[] vertices = new Vector4f[3];
-            List<Object> interpolates = new LinkedList<>();
+            Map<String, List<Object>> interpolates = new HashMap<>();
             for (int j = 0; j < 3; j++) {
                 for (int i1 = 0; i1 < shaderBuffer.size(); i1++) {
                     Object[] objects = shaderBuffer.get(i1);
