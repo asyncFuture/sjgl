@@ -9,7 +9,9 @@ SJGL is a software rasterization library for Java. It can rasterize triangles an
 <img alt="triangle.png" height="600" src="https://asyncfuture.de/triangle.png?ex=679ee682&is=679d9502&hm=efb572d7a3e504be00cf32b0abb79b4231b5899bd70ee490609b493eaa1350c4&" title="example-triangle" width="600"/>
 
 ````java
-public class Main {
+public class Test {
+
+    public static double NS = 1000000000.0 / 60.0;
 
     public static Shader PROGRAM_SHADER = new Shader() {
 
@@ -17,47 +19,60 @@ public class Main {
         private Vector4f inVertex;
 
         @Layout(index = 1)
-        private Vector4f inColor;
+        private Vector2f inUv;
 
         @Interpolate
-        private Vector4f color;
+        private Vector2f uv;
 
-        @Uniform(key = "matrix")
+        @Uniform(key = "transformation")
         private Matrix3x3f matrix;
+
+        @Uniform(key = "sample01")
+        private Texture texture;
 
         @Override
         public Vector4f vertex() {
-            color = inColor;
-
+            uv = inUv;
             Vector3f transform = matrix.transform(new Vector2f(inVertex.x, inVertex.y));
-
             return new Vector4f(transform, 1.0f);
         }
 
         @Override
         public Vector4f fragment() {
-            return color;
+            return texture.texture(uv);
         }
     };
 
     public static void main(String[] args) {
-        Display display = new Display("First Triangle", 600, 600);
+        Display display = new Display("First Triangle", 800, 800);
         FrameBuffer buffer = display.frameBuffer();
         SJGL sjgl = new SJGL(buffer);
 
-        Matrix3x3f matrix = new Matrix3x3f();
-        float share = 0;
-
         PROGRAM_SHADER.buffer().store(0, new Vector4f[]{
-                new Vector4f(0, 0.5f, 0, 1),
+                new Vector4f(-0.5f, 0.5f, 0, 1),
                 new Vector4f(-0.5f, -0.5f, 0, 1),
                 new Vector4f(0.5f, -0.5f, 0, 1),
 
-        }).store(1, new Vector4f[]{
-                new Vector4f(1, 0, 0, 1),
-                new Vector4f(0, 1, 0, 1),
-                new Vector4f(0, 0, 1, 1),
+                new Vector4f(-0.5f, 0.5f, 0, 1),
+                new Vector4f(0.5f, 0.5f, 0, 1),
+                new Vector4f(0.5f, -0.5f, 0, 1),
+
+        }).store(1, new Vector2f[]{
+                new Vector2f(0, 0),
+                new Vector2f(0, 1),
+                new Vector2f(1, 1),
+
+                new Vector2f(0, 0),
+                new Vector2f(1, 0),
+                new Vector2f(1, 1),
         });
+
+        //important for the shader cache handling!
+        PROGRAM_SHADER.compile();
+
+        Texture texture = new Texture(Texture.class.getResourceAsStream("/grass.png"));
+        Matrix3x3f transformation = new Matrix3x3f();
+        float rotate = 0;
 
         sjgl.setShader(PROGRAM_SHADER);
 
@@ -65,10 +80,11 @@ public class Main {
         while (!display.isRequestClosing()) {
             buffer.clear(0xff);
 
-            matrix.identity().fast(new Vector2f(0,0), (float) Math.toRadians(share++), new Vector2f(1,1));
+            transformation.fast(new Vector2f(0, 0), (float) Math.toRadians(rotate++), new Vector2f(1, 1));
 
-            Shader.setUniform(PROGRAM_SHADER,"matrix", matrix);
-            sjgl.drawTriangles(3);
+            Shader.setUniform(PROGRAM_SHADER, "sample01", texture);
+            Shader.setUniform(PROGRAM_SHADER, "transformation", transformation);
+            sjgl.drawTriangles(6);
 
             display.swap();
             display.sleep(16);
