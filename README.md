@@ -6,7 +6,7 @@ SJGL is a software rasterization library for Java. It can rasterize triangles an
 - This project is still in its early stages. Later on, a 3D implementation will be included, featuring Matrix4f, frustum clipping, and perspective correction for textures.
 
 ## First Triangle:
-<img alt="triangle.png" height="600" src="https://cdn.discordapp.com/attachments/1171315508008714261/1335089519074086955/triangle.png?ex=679ee682&is=679d9502&hm=efb572d7a3e504be00cf32b0abb79b4231b5899bd70ee490609b493eaa1350c4&" title="example-triangle" width="600"/>
+<img alt="triangle.png" height="600" src="https://asyncfuture.de/triangle.png?ex=679ee682&is=679d9502&hm=efb572d7a3e504be00cf32b0abb79b4231b5899bd70ee490609b493eaa1350c4&" title="example-triangle" width="600"/>
 
 ````java
 public class Main {
