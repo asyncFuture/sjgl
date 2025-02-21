@@ -1,11 +1,12 @@
 package me.async.sjgl;
 
-import me.async.sjgl.utils.BiAction;
 import me.async.sjgl.math.Vector4f;
+import me.async.sjgl.utils.BiAction;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -63,37 +64,56 @@ public abstract class Shader {
         }
     }
 
-    public static void setLayout(Shader shader, int index, Object object) {
-        fields(shader, Layout.class, (field, layout) -> {
-            if (layout.index() != index) return;
-            field.set(shader, object);
-        });
-    }
-
-    public static void setUniform(Shader shader, String key, Object object) {
-        fields(shader, Uniform.class, (field, uniform) -> {
-            if (!uniform.key().equals(key)) return;
-            field.set(shader, object);
-        });
-    }
-
-    public static void setInterpolate(Shader shader, Object object) {
-        fields(shader, Interpolate.class, (field, interpolate) -> {
-            if (field.getType() != object.getClass()) return;
-            field.set(shader, object);
-        });
-    }
-
-    public static void interpolates(Shader shader, List<Object> interpolates) {
+    public static void interpolates(Shader shader, Map<String, List<Object>> interpolates) {
         fields(shader, Interpolate.class, (field, interpolate) -> {
             try {
                 Object e = field.get(shader);
-                interpolates.add(e);
+                if (!interpolates.containsKey(field.getName())) {
+                    interpolates.put(field.getName(), new LinkedList<>());
+                }
+                List<Object> objects = interpolates.get(field.getName());
+                objects.add(e);
+
+                interpolates.put(field.getName(), objects);
             } catch (IllegalAccessException ex) {
                 throw new RuntimeException(ex);
             }
         });
     }
+
+    public static void setInterpolate(Shader shader, String key, Object f) {
+        try {
+            Field field = shader.interpolations.get(key);
+            if (field == null) return;
+            field.set(shader, f);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void setUniform(Shader shader, String name, Object value) {
+        try {
+            Field field = shader.getUniforms().get(name);
+            if (field == null) return;
+            field.set(shader, value);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void setLayout(Shader shader, int index, Object value) {
+        try {
+            Field field = shader.getLayouts().get(index);
+            if (field == null) return;
+            field.set(shader, value);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private final Map<String, Field> uniforms = new HashMap<>();
+    private final Map<Integer, Field> layouts = new HashMap<>();
+    private final Map<String, Field> interpolations = new HashMap<>();
 
     private final Buffer buffer = new Buffer();
 
@@ -103,5 +123,38 @@ public abstract class Shader {
 
     public Buffer buffer() {
         return buffer;
+    }
+
+    public void compile() {
+        for (Field field : getClass().getDeclaredFields()) {
+            field.trySetAccessible();
+
+            Annotation uniform = field.getAnnotation(Uniform.class);
+            if (uniform != null) {
+                uniforms.put(((Uniform) uniform).key(), field);
+            }
+
+            uniform = field.getAnnotation(Layout.class);
+            if (uniform != null) {
+                layouts.put(((Layout) uniform).index(), field);
+            }
+
+            uniform = field.getAnnotation(Interpolate.class);
+            if (uniform != null) {
+                interpolations.put(field.getName(), field);
+            }
+        }
+    }
+
+    public Map<String, Field> getUniforms() {
+        return uniforms;
+    }
+
+    public Map<Integer, Field> getLayouts() {
+        return layouts;
+    }
+
+    public Map<String, Field> getInterpolations() {
+        return interpolations;
     }
 }
