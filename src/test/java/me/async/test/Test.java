@@ -12,6 +12,8 @@ import me.async.sjgl.system.Display;
 
 public class Test {
 
+    public static double NS = 1000000000.0 / 60.0;
+
     public static Shader PROGRAM_SHADER = new Shader() {
 
         @Layout(index = 0)
@@ -66,6 +68,9 @@ public class Test {
                 new Vector2f(1, 1),
         });
 
+        //important for the shader cache handling!
+        PROGRAM_SHADER.compile();
+
         Texture texture = new Texture(Texture.class.getResourceAsStream("/grass.png"));
         Matrix3x3f transformation = new Matrix3x3f();
         float rotate = 0;
@@ -73,18 +78,26 @@ public class Test {
         sjgl.setShader(PROGRAM_SHADER);
 
         display.show();
-        while (!display.isRequestClosing()) {
-            buffer.clear(SJGL.rgba(0, 0, 0, 255));
 
-            transformation.fast(new Vector2f(0, 0), (float) Math.toRadians(rotate++), new Vector2f(1, 1));
+        long lastTime = System.nanoTime();
+        double delta = 0;
+        while (!display.isRequestClosing()) {
+            long now = System.nanoTime();
+            delta += (now - lastTime) / NS;
+            lastTime = now;
+
+            buffer.clear(0xff);
+            while (delta >= 1) {
+                transformation.fast(new Vector2f(0, 0), (float) Math.toRadians(rotate++), new Vector2f(1, 1));
+                delta--;
+            }
 
             Shader.setUniform(PROGRAM_SHADER, "sample01", texture);
             Shader.setUniform(PROGRAM_SHADER, "transformation", transformation);
             sjgl.drawTriangles(6);
 
             display.swap();
-
-            display.sleep(16);
+            display.sleep(1);
         }
         display.destroy();
     }
