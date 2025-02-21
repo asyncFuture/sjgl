@@ -2,9 +2,9 @@ package me.async.sjgl;
 
 import me.async.sjgl.math.Vector2f;
 import me.async.sjgl.math.Vector4f;
+import me.async.sjgl.utils.SJGLUtils;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.InputStream;
@@ -16,24 +16,10 @@ public class Texture {
 
     private int width, height;
 
-    public static BufferedImage converter(BufferedImage image) {
-        BufferedImage intImage = new BufferedImage(
-                image.getWidth(),
-                image.getHeight(),
-                BufferedImage.TYPE_INT_ARGB
-        );
-
-        Graphics2D g = intImage.createGraphics();
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-
-        return intImage;
-    }
-
     public Texture(InputStream input) {
         try {
             this.buffer = ImageIO.read(input);
-            this.buffer = converter(buffer);
+            this.buffer = SJGLUtils.converter(buffer);
             this.data = ((DataBufferInt) buffer.getRaster().getDataBuffer()).getData();
             this.width = buffer.getWidth();
             this.height = buffer.getHeight();
@@ -48,7 +34,6 @@ public class Texture {
 
         return SJGL.rgba(getPixel(u, v));
     }
-
 
     public int getPixel(int x, int y) {
         return data[x + y * width];
