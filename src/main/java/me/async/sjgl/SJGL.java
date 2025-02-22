@@ -1,8 +1,10 @@
 package me.async.sjgl;
 
+import me.async.sjgl.buffer.DepthBuffer;
 import me.async.sjgl.buffer.FrameBuffer;
 import me.async.sjgl.math.Vector4f;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,13 +12,16 @@ import java.util.Map;
 public class SJGL {
 
     private final FrameBuffer buffer;
+    private final DepthBuffer depthBuffer;
+
     private final Scanline scanline;
 
     private Shader shader;
 
     public SJGL(FrameBuffer buffer) {
         this.buffer = buffer;
-        this.scanline = new Scanline(buffer);
+        this.depthBuffer = new DepthBuffer(buffer.width(), buffer.height());
+        this.scanline = new Scanline(buffer, depthBuffer);
     }
 
     public static int rgba(int red, int green, int blue, int alpha) {
@@ -49,14 +54,13 @@ public class SJGL {
 
     public void clear(int data) {
         buffer.clear(data);
+        depthBuffer.clear();
     }
 
     public static Vector4f ndc(FrameBuffer buffer, Vector4f vec) {
-        if(vec.w != 0) {
-            vec.x /= vec.w;
-            vec.y /= vec.w;
-            vec.z /= vec.w;
-        }
+        vec.x /= vec.w;
+        vec.y /= vec.w;
+        vec.z /= vec.w;
 
         float x = Math.round((vec.x + 1.0f) * buffer.halfWidth());
         float y = Math.round((-vec.y + 1.0f) * buffer.halfHeight());
@@ -76,8 +80,39 @@ public class SJGL {
             Map<String, List<Object>> interpolates = new HashMap<>();
             for (int j = 0; j < 3; j++) {
                 for (int i1 = 0; i1 < shaderBuffer.size(); i1++) {
-                    Object[] objects = shaderBuffer.get(i1);
+                    Object[] objects = shaderBuffer.getArray(i1);
                     Shader.setLayout(shader, i1, objects[i + j]);
+                }
+                vertices[j] = ndc(buffer, shader.vertex());
+                Shader.interpolates(shader, interpolates);
+            }
+
+            Vector4f v0 = vertices[0];
+            Vector4f v1 = vertices[1];
+            Vector4f v2 = vertices[2];
+
+            scanline.setVertices(new Vector4f[]{v0, v1, v2});
+            scanline.setObjects(interpolates);
+
+            scanline.rasterization();
+        }
+    }
+
+    public void drawTrianglesIndices() {
+        Shader.Buffer shaderBuffer = shader.buffer();
+        int[] indices = shaderBuffer.getInts(0);
+
+        if (indices.length % 3 != 0) {
+            throw new RuntimeException("Invalid number of triangles: " + indices.length + ". The count must be divisible by 3.");
+        }
+        for (int i = 0; i < indices.length; i += 3) {
+            Vector4f[] vertices = new Vector4f[3];
+            Map<String, List<Object>> interpolates = new HashMap<>();
+
+            for (int j = 0; j < 3; j++) {
+                for (int i1 = 1; i1 < shaderBuffer.size(); i1++) {
+                    Object[] array = shaderBuffer.getArray(i1);
+                    Shader.setLayout(shader, i1, array[indices[i + j]]);
                 }
                 vertices[j] = ndc(buffer, shader.vertex());
                 Shader.interpolates(shader, interpolates);
