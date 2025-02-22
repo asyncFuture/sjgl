@@ -33,6 +33,8 @@ public class Display {
         this.canvas.addMouseMotionListener(mouse);
         this.canvas.addMouseWheelListener(mouse);
 
+        this.canvas.setFocusable(true);
+
         this.frame = new Frame(title);
         this.frame.add(canvas);
         this.frame.pack();
