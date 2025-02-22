@@ -35,13 +35,13 @@ public class Cube {
         @Override
         public Vector4f fragment() {
             Vector4f output = color;
-          //  output.w = sjgl_Pos.z / sjgl_Pos.w;
+            output.w = sjgl_Pos.z / sjgl_Pos.w;
             return output;
         }
     };
 
     public static void main(String[] args) {
-        Display display = new Display("Projection Test", 500, 500);
+        Display display = new Display("Projection Test", 800, 600);
         SJGL sjgl = new SJGL(display.frameBuffer());
 
         SHADER.buffer().store(0, new int[]{
@@ -100,9 +100,9 @@ public class Cube {
 
         sjgl.setShader(SHADER.compile());
 
-        Matrix4f perspective = new Matrix4f().identity().perspective((float) Math.toRadians(55), 1, 0.1f, 100f);
+        Matrix4f perspective = new Matrix4f().identity().perspective((float) Math.toRadians(55), 800f / 600f, 0.1f, 100f);
 
-        Vector3f position = new Vector3f(0, 0, -5);
+        Vector3f position = new Vector3f(0, 0, -3);
         Vector3f rotation = new Vector3f(45,45,0);
 
 
@@ -115,6 +115,10 @@ public class Cube {
             if (Input.isButton(MouseEvent.BUTTON1)) {
                 rotation.x += Input.mouseY();
                 rotation.y += Input.mouseX();
+            } else {
+                rotation.x++;
+                rotation.y++;
+                rotation.z++;
             }
 
             Matrix4f matrix = new Matrix4f().identity().translate(position).rotate(rotation.toRadians()).scale(1);
