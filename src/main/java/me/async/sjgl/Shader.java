@@ -4,11 +4,9 @@ import me.async.sjgl.math.Vector4f;
 import me.async.sjgl.utils.BiAction;
 
 import java.lang.annotation.*;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Shader {
 
@@ -47,8 +45,31 @@ public abstract class Shader {
             return this;
         }
 
-        public Object[] get(int index) {
+        public Buffer store(int index, int[] value) {
+            Object[] objects = new Object[value.length];
+            for (int i = 0; i < objects.length; i++) {
+                objects[i] = value[i];
+            }
+
+            map.put(index, objects);
+            return this;
+        }
+
+        public Object getObject(int index) {
             return map.get(index);
+        }
+
+        public Object[] getArray(int index) {
+            return map.get(index);
+        }
+
+        public int[] getInts(int index){
+            Object[] array = getArray(index);
+            int[] result = new int[array.length];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = (int) array[i];
+            }
+            return result;
         }
 
         public int size() {
@@ -127,6 +148,8 @@ public abstract class Shader {
 
     private final Buffer buffer = new Buffer();
 
+    protected Vector4f sjgl_Pos;
+
     public abstract Vector4f vertex();
 
     public abstract Vector4f fragment();
@@ -152,7 +175,6 @@ public abstract class Shader {
             uniform = field.getAnnotation(Interpolate.class);
             if (uniform != null) {
                 interpolations.put(field.getName(), field);
-                System.out.println(field.getName() + " : " + field);
             }
         }
         return this;
