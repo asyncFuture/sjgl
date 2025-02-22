@@ -12,6 +12,15 @@ import java.util.Map;
 
 public abstract class Shader {
 
+    public static class Exception extends RuntimeException {
+        public Exception() {
+        }
+
+        public Exception(String message) {
+            super(message);
+        }
+    }
+
     @Target(ElementType.FIELD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Layout {
@@ -45,10 +54,10 @@ public abstract class Shader {
         public int size() {
             return map.size();
         }
+    }
 
-        public Map<Integer, Object[]> getMap() {
-            return map;
-        }
+    private static void throwError(String message) {
+        throw new Exception(message);
     }
 
     public static <T extends Annotation> void fields(Shader shader, Class<T> clazz, BiAction<Field, T> action) {
@@ -58,7 +67,7 @@ public abstract class Shader {
                 T annotation = field.getAnnotation(clazz);
                 if (annotation == null) continue;
                 action.accept(field, annotation);
-            } catch (Exception e) {
+            } catch (java.lang.Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -84,7 +93,7 @@ public abstract class Shader {
     public static void setInterpolate(Shader shader, String key, Object f) {
         try {
             Field field = shader.interpolations.get(key);
-            if (field == null) return;
+            if (field == null) throwError("Interpolation field: '" + key + "' could not be found!");
             field.set(shader, f);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -93,8 +102,8 @@ public abstract class Shader {
 
     public static void setUniform(Shader shader, String name, Object value) {
         try {
-            Field field = shader.getUniforms().get(name);
-            if (field == null) return;
+            Field field = shader.uniforms.get(name);
+            if (field == null) throwError("Uniform field: '" + name + "' could not be found!");
             field.set(shader, value);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -103,8 +112,9 @@ public abstract class Shader {
 
     public static void setLayout(Shader shader, int index, Object value) {
         try {
-            Field field = shader.getLayouts().get(index);
-            if (field == null) return;
+            Field field = shader.layouts.get(index);
+            if (field == null)
+                throwError("Layout field: 'index: " + index + ", value: " + value + "' could not be found!");
             field.set(shader, value);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -125,7 +135,7 @@ public abstract class Shader {
         return buffer;
     }
 
-    public void compile() {
+    public Shader compile() {
         for (Field field : getClass().getDeclaredFields()) {
             field.trySetAccessible();
 
@@ -142,19 +152,9 @@ public abstract class Shader {
             uniform = field.getAnnotation(Interpolate.class);
             if (uniform != null) {
                 interpolations.put(field.getName(), field);
+                System.out.println(field.getName() + " : " + field);
             }
         }
-    }
-
-    public Map<String, Field> getUniforms() {
-        return uniforms;
-    }
-
-    public Map<Integer, Field> getLayouts() {
-        return layouts;
-    }
-
-    public Map<String, Field> getInterpolations() {
-        return interpolations;
+        return this;
     }
 }
