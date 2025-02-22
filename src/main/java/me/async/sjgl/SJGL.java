@@ -1,5 +1,6 @@
 package me.async.sjgl;
 
+import me.async.sjgl.buffer.FrameBuffer;
 import me.async.sjgl.math.Vector4f;
 
 import java.util.HashMap;
@@ -51,9 +52,11 @@ public class SJGL {
     }
 
     public static Vector4f ndc(FrameBuffer buffer, Vector4f vec) {
-        vec.x /= vec.w;
-        vec.y /= vec.w;
-        vec.z /= vec.w;
+        if(vec.w != 0) {
+            vec.x /= vec.w;
+            vec.y /= vec.w;
+            vec.z /= vec.w;
+        }
 
         float x = Math.round((vec.x + 1.0f) * buffer.halfWidth());
         float y = Math.round((-vec.y + 1.0f) * buffer.halfHeight());
@@ -62,6 +65,10 @@ public class SJGL {
     }
 
     public void drawTriangles(int count) {
+        if (count % 3 != 0) {
+            throw new RuntimeException("Invalid number of triangles: " + count + ". The count must be divisible by 3.");
+        }
+
         Shader.Buffer shaderBuffer = shader.buffer();
 
         for (int i = 0; i < count; i += 3) {
