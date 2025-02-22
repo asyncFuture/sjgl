@@ -43,6 +43,15 @@ public class Vector4f {
         return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
     }
 
+    public Vector4f lerp(Vector4f other, float t) {
+        return new Vector4f(
+                x + t * (other.x - x),
+                y + t * (other.y - y),
+                z + t * (other.z - z),
+                w + t * (other.w - w)
+        );
+    }
+
     @Override
     public String toString() {
         return "Vector4f{" +
