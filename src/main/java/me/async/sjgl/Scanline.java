@@ -1,5 +1,6 @@
 package me.async.sjgl;
 
+import me.async.sjgl.buffer.DepthBuffer;
 import me.async.sjgl.buffer.FrameBuffer;
 import me.async.sjgl.math.Barycentric;
 import me.async.sjgl.math.Vector3f;
@@ -10,14 +11,16 @@ import java.util.Map;
 
 public class Scanline {
 
-    public final FrameBuffer buffer;
-    public Shader shader;
+    private final FrameBuffer buffer;
+    private final DepthBuffer depthBuffer;
+    private Shader shader;
 
     private Vector4f[] vertices;
     private Map<String, List<Object>> objects;
 
-    public Scanline(FrameBuffer buffer) {
+    public Scanline(FrameBuffer buffer, DepthBuffer depthBuffer) {
         this.buffer = buffer;
+        this.depthBuffer = depthBuffer;
     }
 
     public void rasterization() {
@@ -110,6 +113,19 @@ public class Scanline {
             float v = baryCords.y;
             float w = baryCords.z;
 
+            shader.sjgl_Pos = new Vector4f(
+                    u * vertices[0].x + v * vertices[1].x + w * vertices[2].x,
+                    u * vertices[0].y + v * vertices[1].y + w * vertices[2].y,
+                    u * vertices[0].z + v * vertices[1].z + w * vertices[2].z,
+                    u * vertices[0].w + v * vertices[1].w + w * vertices[2].w
+            );
+
+            float depth = 1.0f / (shader.sjgl_Pos.z / shader.sjgl_Pos.w);
+            if (depthBuffer.getDepth(i, y) < depth) {
+                continue;
+            }
+
+            depthBuffer.setDepth(i, y, depth);
 
             for (String s : objects.keySet()) {
                 List<Object> list = objects.get(s);
@@ -119,6 +135,7 @@ public class Scanline {
                     Shader.setInterpolate(shader, s, f);
                 }
             }
+
             Vector4f fragment = shader.fragment();
 
             buffer.setPixel(SJGL.rgba(fragment.x, fragment.y, fragment.z, fragment.w), i, y);
