@@ -1,6 +1,6 @@
 package me.async.sjgl.system;
 
-import me.async.sjgl.FrameBuffer;
+import me.async.sjgl.buffer.FrameBuffer;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;

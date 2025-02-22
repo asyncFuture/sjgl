@@ -1,4 +1,4 @@
-package me.async.sjgl;
+package me.async.sjgl.buffer;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
