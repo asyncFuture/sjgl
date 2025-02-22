@@ -15,6 +15,10 @@ public class Vector4f {
         this(v.x, v.y, v.z, v.w);
     }
 
+    public Vector4f(Vector2f vec, float w) {
+        this(vec.x, vec.y, 0, w);
+    }
+
     public Vector4f(Vector3f v, float w) {
         this(v.x, v.y, v.z, w);
     }

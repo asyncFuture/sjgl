@@ -14,6 +14,10 @@ public class Vector3f {
         this(v.x, v.y, v.z);
     }
 
+    public Vector3f(float v) {
+        this(v, v, v);
+    }
+
     public Vector3f sub(Vector3f v) {
         return new Vector3f(x - v.x, y - v.y, z - v.z);
     }
@@ -34,6 +38,10 @@ public class Vector3f {
         return this.x * v.x + this.y * v.y + this.z * v.z;
     }
 
+    public Vector3f toRadians() {
+        return new Vector3f((float) Math.toRadians(x), (float) Math.toRadians(y), (float) Math.toRadians(z));
+    }
+
     @Override
     public String toString() {
         return "Vector4f{" +
@@ -42,4 +50,5 @@ public class Vector3f {
                 ", z=" + z +
                 '}';
     }
+
 }
