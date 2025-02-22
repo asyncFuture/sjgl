@@ -1,10 +1,10 @@
 package me.async.sjgl;
 
+import me.async.sjgl.buffer.FrameBuffer;
 import me.async.sjgl.math.Barycentric;
 import me.async.sjgl.math.Vector3f;
 import me.async.sjgl.math.Vector4f;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +43,8 @@ public class Scanline {
             drawBottomFlatTriangle(v0, v1, split);
             drawTopFlatTriangle(v1, split, v2);
         }
+        vertices = null;
+        objects = null;
     }
 
     public static void swap(Vector4f[] vertices, Map<String, List<Object>> objects, Vector4f v0, Vector4f v1, int index) {
@@ -114,7 +116,7 @@ public class Scanline {
 
                 for (int i1 = 0; i1 < list.size() / 3; i1++) {
                     Object f = Barycentric.interpolate(i1, list, u, v, w);
-                    Shader.setInterpolate(shader, objects.keySet().stream().toList().get(i1), f);
+                    Shader.setInterpolate(shader, s, f);
                 }
             }
             Vector4f fragment = shader.fragment();
